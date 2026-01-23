@@ -1,144 +1,99 @@
-ComfyUI Camera Motion (Three.js Powered)
-English | 中文
+# ComfyUI Camera Motion (Three.js Powered)
+
+[English](#english) | [中文](#chinese)
 
 一个基于 Three.js 的 ComfyUI 扩展，用于可视化地设计、预览和生成复杂的 3D 相机运镜与人物运动轨迹。生成的运动数据/图像序列可直接用于 AnimateDiff、ControlNet 或 VideoHelperSuite，实现精确的 AI 视频运镜控制。
 
-🚧 当前状态: 开发中 (Alpha) - 核心通信框架已完成，正在集成渲染内核。
+> 🚧 **当前状态**: 开发中 (Alpha) - 核心通信框架已完成，正在集成渲染内核。
 
-![alt text](https://via.placeholder.com/800x400?text=Preview+Placeholder+Image)
 
-(请在此处替换为你实际运行时的界面截图)
+
+---
 
 <a name="english"></a>
+## ✨ Features
 
-✨ Features
-Visual 3D Preview: Real-time preview of camera movement and character animation inside a ComfyUI node using Three.js.
+*   **Visual 3D Preview**: Real-time preview of camera movement and character animation inside a ComfyUI node using Three.js.
+*   **Modular Design**: Separate nodes for Scene Settings, Motion Definitions, and Rendering to keep workflows clean.
+*   **Dual Camera Modes**:
+    *   **Follow Target**: Camera automatically tracks the moving character (great for orbiting shots).
+    *   **Fixed Target**: Camera stays focused on a fixed point while the character moves away.
+*   **Complex Motion Chaining**: Chain multiple motion segments (Pan, Tilt, Zoom, Roll, XYZ movement) with customizable easing functions.
+*   **Web Integration**: Seamlessly embeds a lightweight 3D engine within the ComfyUI interface.
 
-Modular Design: Separate nodes for Scene Settings, Motion Definitions, and Rendering to keep workflows clean.
+## 📦 Installation
 
-Dual Camera Modes:
+1.  Navigate to your ComfyUI custom nodes directory:
+    ```bash
+    cd ComfyUI/custom_nodes/
+    ```
+2.  Clone this repository:
+    ```bash
+    git clone https://github.com/YourUsername/ComfyUI_Camera_Motion.git
+    ```
+3.  Restart ComfyUI.
 
-Follow Target: Camera automatically tracks the moving character (great for orbiting shots).
+## Nodes Usage
 
-Fixed Target: Camera stays focused on a fixed point while the character moves away.
-
-Complex Motion Chaining: Chain multiple motion segments (Pan, Tilt, Zoom, Roll, XYZ movement) with customizable easing functions.
-
-Web Integration: Seamlessly embeds a lightweight 3D engine within the ComfyUI interface.
-
-📦 Installation
-Navigate to your ComfyUI custom nodes directory:
-
-code
-Bash
-cd ComfyUI/custom_nodes/
-Clone this repository:
-
-code
-Bash
-git clone https://github.com/YourUsername/ComfyUI_Camera_Motion.git
-Restart ComfyUI.
-
-nodes Usage
-1. CM_SceneSettings (🎥 Scene Settings)
+### 1. CM_SceneSettings (🎥 Scene Settings)
 Defines the global environment.
+*   **figure_scale**: Size of the reference character.
+*   **camera_follow_mode**: `follow` (track character) or `fixed` (static look-at point).
+*   **initial_distance/elevation/azimuth**: Starting camera position.
 
-figure_scale: Size of the reference character.
-
-camera_follow_mode: follow (track character) or fixed (static look-at point).
-
-initial_distance/elevation/azimuth: Starting camera position.
-
-2. CM_CameraAction (🎬 Camera/Figure Action)
+### 2. CM_CameraAction (🎬 Camera/Figure Action)
 Defines a single segment of motion. You can chain multiple actions together.
+*   **action_type**: Choose between Camera moves (Distance, Elevation, Azimuth, Roll, FOV, Pan) or Figure moves (X/Y/Z Pos).
+*   **start/end frame**: Timeline for this specific action.
+*   **easing**: Smoothness of the transition (Linear, EaseIn, EaseOut, etc.).
 
-action_type: Choose between Camera moves (Distance, Elevation, Azimuth, Roll, FOV, Pan) or Figure moves (X/Y/Z Pos).
-
-start/end frame: Timeline for this specific action.
-
-easing: Smoothness of the transition (Linear, EaseIn, EaseOut, etc.).
-
-3. CM_Renderer (📺 Motion Preview & Render)
+### 3. CM_Renderer (📺 Motion Preview & Render)
 The output node that visualizes the data.
+*   **Inputs**: Accepts scene config and action lists.
+*   **Preview**: Shows a black window initially, updates with 3D preview after running the queue.
+*   **Output**: Generates an `IMAGE` batch (Tensor) for downstream nodes (e.g., AnimateDiff).
 
-Inputs: Accepts scene config and action lists.
-
-Preview: Shows a black window initially, updates with 3D preview after running the queue.
-
-Output: Generates an IMAGE batch (Tensor) for downstream nodes (e.g., AnimateDiff).
+---
 
 <a name="chinese"></a>
+## ✨ 功能特点
 
-✨ 功能特点
-可视化 3D 预览: 在 ComfyUI 节点内直接嵌入 Three.js 窗口，实时预览相机和人物的运动轨迹。
+*   **可视化 3D 预览**: 在 ComfyUI 节点内直接嵌入 Three.js 窗口，实时预览相机和人物的运动轨迹。
+*   **模块化设计**: 将场景设置、动作定义和渲染分离为不同节点，符合 ComfyUI 的连线逻辑。
+*   **双相机模式**:
+    *   **跟随目标 (Follow)**: 无论人物如何移动，相机始终聚焦人物（适合环绕跟拍）。
+    *   **固定目标 (Fixed)**: 相机聚焦在初始位置，人物可以走出画面（适合固定机位）。
+*   **复杂运动组合**: 支持无限串联多个动作片段（推拉、摇移、旋转、横滚、人物位移），并支持多种缓动曲线。
+*   **无缝集成**: 它可以生成单纯的导引图像，完美配合 AnimateDiff 或 ControlNet 使用。
 
-模块化设计: 将场景设置、动作定义和渲染分离为不同节点，符合 ComfyUI 的连线逻辑。
+## 📦 安装说明
 
-双相机模式:
+1.  进入你的 ComfyUI 插件目录：
+    ```bash
+    cd ComfyUI/custom_nodes/
+    ```
+2.  克隆本项目：
+    ```bash
+    git clone https://github.com/tdrminglin/ComfyUI_Camera_Motion.git
+    ```
+3.  重启 ComfyUI。
 
-跟随目标 (Follow): 无论人物如何移动，相机始终聚焦人物（适合环绕跟拍）。
+## 🛠️ 节点使用指南
 
-固定目标 (Fixed): 相机聚焦在初始位置，人物可以走出画面（适合固定机位）。
-
-复杂运动组合: 支持无限串联多个动作片段（推拉、摇移、旋转、横滚、人物位移），并支持多种缓动曲线。
-
-无缝集成: 它可以生成单纯的导引图像，完美配合 AnimateDiff 或 ControlNet 使用。
-
-📦 安装说明
-进入你的 ComfyUI 插件目录：
-
-code
-Bash
-cd ComfyUI/custom_nodes/
-克隆本项目：
-
-code
-Bash
-git clone https://github.com/你的用户名/ComfyUI_Camera_Motion.git
-重启 ComfyUI。
-
-🛠️ 节点使用指南
-1. 场景设置 (CM_SceneSettings)
+### 1. 场景设置 (CM_SceneSettings)
 用于定义全局的初始状态。
+*   **figure_scale**: 参考小人的大小。
+*   **camera_follow_mode**: 选择相机是“跟随人物移动”还是“盯着固定点”。
+*   **initial_...**: 定义相机的初始距离、角度和视野。
 
-figure_scale: 参考小人的大小。
+### 2. 动作定义 (CM_CameraAction)
+定义一段具体的运动。支持链式连接（将上一个动作连入 `prev_action`）。
+*   **action_type**: 选择是相机运动（距离、高度角、方位角、横滚、FOV、平移）还是人物运动（X/Y/Z轴位移）。
+*   **start/end frame**: 该动作持续的帧数范围。
+*   **easing**: 运动的缓动效果（线性、渐入、渐出等）。
 
-camera_follow_mode: 选择相机是“跟随人物移动”还是“盯着固定点”。
-
-initial_...: 定义相机的初始距离、角度和视野。
-
-2. 动作定义 (CM_CameraAction)
-定义一段具体的运动。支持链式连接（将上一个动作连入 prev_action）。
-
-action_type: 选择是相机运动（距离、高度角、方位角、横滚、FOV、平移）还是人物运动（X/Y/Z轴位移）。
-
-start/end frame: 该动作持续的帧数范围。
-
-easing: 运动的缓动效果（线性、渐入、渐出等）。
-
-3. 预览与渲染 (CM_Renderer)
+### 3. 预览与渲染 (CM_Renderer)
 核心节点，用于接收数据并生成图像。
-
-输入: 连接上面的场景配置和动作列表。
-
-预览: 点击 Queue Prompt 运行后，节点中间的窗口会加载 3D 场景并根据参数播放动画。
-
-输出: 输出 IMAGE 格式的图片序列，可以直接连入 VideoHelperSuite 的 Video Combine 或 AnimateDiff。
-
-🗺️ Roadmap (开发计划)
-
-Phase 1: 完成 ComfyUI 后端与前端 iframe 的数据通信框架。
-
-
-Phase 2: 完整移植 Three.js 渲染逻辑，实现节点内的 3D 实时预览。
-
-
-Phase 3: 实现帧同步回传，将 3D 画面转为 ComfyUI 的 Tensor 图像流输出。
-
-
-Phase 4: 支持更多样化的 3D 模型导入和更复杂的运镜曲线编辑器。
-
-📄 License
-MIT License
-
-Developed with ❤️ by [Your Name] & AI Assistant
+*   **输入**: 连接上面的场景配置和动作列表。
+*   **预览**: 点击 Queue Prompt 运行后，节点中间的窗口会加载 3D 场景并根据参数播放动画。
+*   **输出**: 输出 `IMAGE` 格式的图片序列，可以直接连入 VideoHelperSuite 的 `Video Combi
