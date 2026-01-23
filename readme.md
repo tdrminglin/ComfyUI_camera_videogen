@@ -2,7 +2,7 @@
 
 [English](#english) | [中文](#chinese)
 
-一个基于 Three.js 的 ComfyUI 扩展，用于可视化地设计、预览和生成复杂的 3D 相机运镜与人物运动轨迹。生成的运动数据/图像序列可直接用于 AnimateDiff、ControlNet 或 VideoHelperSuite，实现精确的 AI 视频运镜控制。
+一个基于 Three.js 的 ComfyUI 扩展，用于可视化地设计、预览和生成复杂的 3D 相机运镜与人物运动轨迹。生成的运动数据/图像序列可直接用于 AnimateDiff、ControlNet 或 VideoHelperSuite，特别是用于uni3c与wan2.1结合，可以实现超强的运镜控制。
 
 > 🚧 **当前状态**: 开发中 (Alpha) - 核心通信框架已完成，正在集成渲染内核。
 
