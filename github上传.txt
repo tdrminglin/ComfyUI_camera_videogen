@@ -1,0 +1,12 @@
+git init
+git remote add origin https://github.com/tdrminglin/ComfyUI_camera_videogen.git
+git remote -v
+git add .
+git commit -m upload
+git pull origin main --allow-unrelated-histories
+
+#git push -u origin main
+
+
+git push --set-upstream origin master
+#git push
