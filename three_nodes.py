@@ -48,8 +48,8 @@ class ThreeJSFigureAction:
                 ],),
                 "start_frame": ("INT", {"default": 0, "min": 0, "max": 9999}),
                 "end_frame": ("INT", {"default": 60, "min": 0, "max": 9999}),
-                "start_value": ("FLOAT", {"default": 0.0, "step": 0.1}),
-                "end_value": ("FLOAT", {"default": 10.0, "step": 0.1}),
+                "start_value": ("FLOAT", {"default": 0.0, "step": 0.1,"min": -9999, "max": 9999}),
+                "end_value": ("FLOAT", {"default": 10.0, "step": 0.1,"min": -9999, "max": 9999}),
                 "easing": ([
                     "linear", "easeInQuad", "easeOutQuad", "easeInOutQuad",
                     "easeInCubic", "easeOutCubic", "easeInOutCubic"
@@ -92,8 +92,8 @@ class ThreeJSCameraAction:
                 ],),
                 "start_frame": ("INT", {"default": 0, "min": 0, "max": 9999}),
                 "end_frame": ("INT", {"default": 60, "min": 0, "max": 9999}),
-                "start_value": ("FLOAT", {"default": 0.0, "step": 0.1}),
-                "end_value": ("FLOAT", {"default": 10.0, "step": 0.1}),
+                "start_value": ("FLOAT", {"default": 0.0, "step": 0.1, "min": -9999, "max": 9999}),
+                "end_value": ("FLOAT", {"default": 10.0, "step": 0.1,"min": -9999, "max": 9999}),
                 "easing": ([
                     "linear", "easeInQuad", "easeOutQuad", "easeInOutQuad",
                     "easeInCubic", "easeOutCubic", "easeInOutCubic"
