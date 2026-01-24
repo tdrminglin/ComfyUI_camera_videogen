@@ -31,8 +31,8 @@
     <script type="importmap">
         {
             "imports": {
-                "three": "./libs/three.module.js",
-                "three/addons/": "./libs/jsm/"
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
             }
         }
     </script>
@@ -48,9 +48,7 @@
         let isRendering = false;
         let previewReqId;
         
-        //const SKYBOX_PATH = "/extensions/ComfyUI_camera_videogen/textures/skybox/";//"./textures/skybox/"; 
-        const basePath = new URL(".", import.meta.url).href;
-        const SKYBOX_PATH = new URL("./textures/skybox/", basePath).href;
+        const SKYBOX_PATH = "./textures/skybox/"; 
         const baseFigureHeadRadius = 0.25;
         const baseFigureBodyHeight = 0.7; 
         
