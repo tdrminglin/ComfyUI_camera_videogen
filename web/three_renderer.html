@@ -48,7 +48,9 @@
         let isRendering = false;
         let previewReqId;
         
-        const SKYBOX_PATH = "./textures/skybox/"; 
+        //const SKYBOX_PATH = "/extensions/ComfyUI_camera_videogen/textures/skybox/";//"./textures/skybox/"; 
+        const basePath = new URL(".", import.meta.url).href;
+        const SKYBOX_PATH = new URL("./textures/skybox/", basePath).href;
         const baseFigureHeadRadius = 0.25;
         const baseFigureBodyHeight = 0.7; 
         
