@@ -273,7 +273,7 @@ class ThreeJSRenderNode:
 
         print(f"[ThreeJS] Request ID: {request_id}, Seed: {seed}")
         PromptServer.instance.send_sync("threejs_render_request", payload)
-        timeout = 60
+        timeout = 200
         start_time = time.time()
         
         while time.time() - start_time < timeout:
