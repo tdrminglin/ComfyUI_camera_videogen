@@ -29,7 +29,7 @@
     ```
 2.  Clone this repository:
     ```bash
-    git clone https://github.com/YourUsername/ComfyUI_Camera_Motion.git
+    git clone https://github.com/tdrminglin/ComfyUI_camera_videogen.git
     ```
 3.  Restart ComfyUI.
 
@@ -74,7 +74,7 @@ The output node that visualizes the data.
     ```
 2.  克隆本项目：
     ```bash
-    git clone https://github.com/tdrminglin/ComfyUI_Camera_Motion.git
+    git clone https://github.com/tdrminglin/ComfyUI_camera_videogen.git
     ```
 3.  重启 ComfyUI。
 
