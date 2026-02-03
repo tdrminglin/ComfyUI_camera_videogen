@@ -1,0 +1,914 @@
+{
+  "id": "acefbc8a-c7f9-43d0-947b-ab5115ff290f",
+  "revision": 0,
+  "last_node_id": 29,
+  "last_link_id": 30,
+  "nodes": [
+    {
+      "id": 12,
+      "type": "ThreeJSCameraConfig",
+      "pos": [
+        -6654.793898717229,
+        -7614.722284452407
+      ],
+      "size": [
+        270,
+        178
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "cam_config",
+          "type": "CAMERA_CONFIG",
+          "links": [
+            10
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "tdrminglin/ComfyUI_camera_videogen",
+        "ver": "7bdd2040f9e9fc959a931558bae0dcfda88cac95",
+        "Node name for S&R": "ThreeJSCameraConfig"
+      },
+      "widgets_values": [
+        "follow",
+        0,
+        7,
+        10,
+        0,
+        50
+      ]
+    },
+    {
+      "id": 20,
+      "type": "HYMotionLoadNetwork",
+      "pos": [
+        -7321.377079451392,
+        -5811.659605206245
+      ],
+      "size": [
+        390.2604166666667,
+        58
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "network",
+          "type": "HYMOTION_NET",
+          "links": [
+            20
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "HYMotionLoadNetwork"
+      },
+      "widgets_values": [
+        "HY-Motion-1.0"
+      ]
+    },
+    {
+      "id": 22,
+      "type": "HYMotionEncodeText",
+      "pos": [
+        -7314.485422927117,
+        -5601.135702779344
+      ],
+      "size": [
+        333.33333333333337,
+        88
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "llm",
+          "type": "HYMOTION_LLM",
+          "link": 22
+        }
+      ],
+      "outputs": [
+        {
+          "name": "conditioning",
+          "type": "HYMOTION_COND",
+          "links": [
+            21
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "HYMotionEncodeText"
+      },
+      "widgets_values": [
+        "A person collapses forward onto their knees, slumps their upper body down, then slowly pushes themselves back up with effort."
+      ]
+    },
+    {
+      "id": 23,
+      "type": "HYMotionLoadLLM",
+      "pos": [
+        -7798.182261402619,
+        -5573.291435571401
+      ],
+      "size": [
+        270,
+        58
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "llm",
+          "type": "HYMOTION_LLM",
+          "links": [
+            22
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "HYMotionLoadLLM"
+      },
+      "widgets_values": [
+        "int4"
+      ]
+    },
+    {
+      "id": 13,
+      "type": "ThreeJSEnvironment",
+      "pos": [
+        -6631.293633829363,
+        -7111.641789060888
+      ],
+      "size": [
+        270,
+        58
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "env_config",
+          "type": "ENV_CONFIG",
+          "links": [
+            11
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "tdrminglin/ComfyUI_camera_videogen",
+        "ver": "7bdd2040f9e9fc959a931558bae0dcfda88cac95",
+        "Node name for S&R": "ThreeJSEnvironment"
+      },
+      "widgets_values": [
+        "Texture Skybox (Folder)"
+      ]
+    },
+    {
+      "id": 16,
+      "type": "ThreeJSFigureAction",
+      "pos": [
+        -7082.258044337116,
+        -6532.493529733859
+      ],
+      "size": [
+        270,
+        178
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "figure_action",
+          "type": "ACTION_SEGMENT",
+          "links": []
+        }
+      ],
+      "properties": {
+        "aux_id": "tdrminglin/ComfyUI_camera_videogen",
+        "ver": "7bdd2040f9e9fc959a931558bae0dcfda88cac95",
+        "Node name for S&R": "ThreeJSFigureAction"
+      },
+      "widgets_values": [
+        "rotation_y",
+        0,
+        30,
+        0,
+        90,
+        "linear"
+      ]
+    },
+    {
+      "id": 18,
+      "type": "ThreeJSFigureAction",
+      "pos": [
+        -7081.989011898071,
+        -6288.2680762829605
+      ],
+      "size": [
+        270,
+        178
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "figure_action",
+          "type": "ACTION_SEGMENT",
+          "links": [
+            18
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "tdrminglin/ComfyUI_camera_videogen",
+        "ver": "7bdd2040f9e9fc959a931558bae0dcfda88cac95",
+        "Node name for S&R": "ThreeJSFigureAction"
+      },
+      "widgets_values": [
+        "x_pos",
+        45,
+        60,
+        0,
+        25,
+        "linear"
+      ]
+    },
+    {
+      "id": 19,
+      "type": "ThreeJSCameraAction",
+      "pos": [
+        -7155.639987745503,
+        -6788.21718630308
+      ],
+      "size": [
+        270,
+        178
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "camera_action",
+          "type": "ACTION_SEGMENT",
+          "links": [
+            19
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "tdrminglin/ComfyUI_camera_videogen",
+        "ver": "7bdd2040f9e9fc959a931558bae0dcfda88cac95",
+        "Node name for S&R": "ThreeJSCameraAction"
+      },
+      "widgets_values": [
+        "distance",
+        45,
+        60,
+        7,
+        3,
+        "linear"
+      ]
+    },
+    {
+      "id": 15,
+      "type": "ThreeJSCameraAction",
+      "pos": [
+        -7169.606575202666,
+        -7009.98964678689
+      ],
+      "size": [
+        270,
+        178
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "camera_action",
+          "type": "ACTION_SEGMENT",
+          "links": [
+            28
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "tdrminglin/ComfyUI_camera_videogen",
+        "ver": "7bdd2040f9e9fc959a931558bae0dcfda88cac95",
+        "Node name for S&R": "ThreeJSCameraAction"
+      },
+      "widgets_values": [
+        "azimuth",
+        0,
+        30,
+        0,
+        80,
+        "linear"
+      ]
+    },
+    {
+      "id": 24,
+      "type": "ThreeJSHYMotionImport",
+      "pos": [
+        -6196.685817337658,
+        -5761.126100704522
+      ],
+      "size": [
+        270,
+        106
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "motion_data",
+          "type": "HYMOTION_DATA",
+          "link": 23
+        }
+      ],
+      "outputs": [
+        {
+          "name": "action_list",
+          "type": "ACTION_LIST",
+          "links": [
+            24
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "tdrminglin/ComfyUI_camera_videogen",
+        "ver": "7bdd2040f9e9fc959a931558bae0dcfda88cac95",
+        "Node name for S&R": "ThreeJSHYMotionImport"
+      },
+      "widgets_values": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": 21,
+      "type": "HYMotionGenerate",
+      "pos": [
+        -6709.809986730621,
+        -5685.582392776744
+      ],
+      "size": [
+        385.1041666666667,
+        174
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "network",
+          "type": "HYMOTION_NET",
+          "link": 20
+        },
+        {
+          "name": "conditioning",
+          "type": "HYMOTION_COND",
+          "link": 21
+        }
+      ],
+      "outputs": [
+        {
+          "name": "motion_data",
+          "type": "HYMOTION_DATA",
+          "links": [
+            23,
+            27
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "HYMotionGenerate"
+      },
+      "widgets_values": [
+        2.5,
+        64172488,
+        "fixed",
+        5,
+        1
+      ]
+    },
+    {
+      "id": 27,
+      "type": "HYMotionPreviewAnimation",
+      "pos": [
+        -6221.729363565057,
+        -5575.161122969871
+      ],
+      "size": [
+        426.6666666666667,
+        668.4
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "motion_data",
+          "type": "HYMOTION_DATA",
+          "link": 27
+        }
+      ],
+      "outputs": [
+        {
+          "name": "motion_data",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "HYMotionPreviewAnimation"
+      },
+      "widgets_values": [
+        0,
+        ""
+      ]
+    },
+    {
+      "id": 6,
+      "type": "ThreeJSActionCombiner",
+      "pos": [
+        -6259.292442959078,
+        -6698.2380607098785
+      ],
+      "size": [
+        165.175390625,
+        186
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "action_1",
+          "type": "ACTION_SEGMENT",
+          "link": 28
+        },
+        {
+          "name": "action_2",
+          "shape": 7,
+          "type": "ACTION_SEGMENT",
+          "link": null
+        },
+        {
+          "name": "action_3",
+          "shape": 7,
+          "type": "ACTION_SEGMENT",
+          "link": 18
+        },
+        {
+          "name": "action_4",
+          "shape": 7,
+          "type": "ACTION_SEGMENT",
+          "link": 19
+        },
+        {
+          "name": "previous_list",
+          "shape": 7,
+          "type": "ACTION_LIST",
+          "link": 24
+        },
+        {
+          "name": "segment_1",
+          "type": "ACTION_SEGMENT",
+          "link": null
+        },
+        {
+          "name": "segment_2",
+          "shape": 7,
+          "type": "ACTION_SEGMENT",
+          "link": null
+        },
+        {
+          "name": "segment_3",
+          "shape": 7,
+          "type": "ACTION_SEGMENT",
+          "link": null
+        },
+        {
+          "name": "segment_4",
+          "shape": 7,
+          "type": "ACTION_SEGMENT",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "action_list",
+          "type": "ACTION_LIST",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "tdrminglin/ComfyUI_camera_videogen",
+        "ver": "7bdd2040f9e9fc959a931558bae0dcfda88cac95",
+        "Node name for S&R": "ThreeJSActionCombiner"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 14,
+      "type": "ThreeJSFigureConfig",
+      "pos": [
+        -6895.855112801646,
+        -7359.571887444598
+      ],
+      "size": [
+        270,
+        178
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "fig_config",
+          "type": "FIGURE_CONFIG",
+          "links": []
+        }
+      ],
+      "properties": {
+        "aux_id": "tdrminglin/ComfyUI_camera_videogen",
+        "ver": "7bdd2040f9e9fc959a931558bae0dcfda88cac95",
+        "Node name for S&R": "ThreeJSFigureConfig"
+      },
+      "widgets_values": [
+        1,
+        0.6,
+        true,
+        "boy_Rigging_smplx_tex.fbx",
+        0,
+        1
+      ]
+    },
+    {
+      "id": 28,
+      "type": "ThreeJSHYMotionFigureConfig",
+      "pos": [
+        -6597.544713841208,
+        -7355.201996792981
+      ],
+      "size": [
+        270,
+        130
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "fig_config",
+          "type": "FIGURE_CONFIG",
+          "links": [
+            29
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "tdrminglin/ComfyUI_camera_videogen",
+        "ver": "7bdd2040f9e9fc959a931558bae0dcfda88cac95",
+        "Node name for S&R": "ThreeJSHYMotionFigureConfig"
+      },
+      "widgets_values": [
+        "wooden",
+        1,
+        true,
+        false
+      ]
+    },
+    {
+      "id": 9,
+      "type": "PreviewImage",
+      "pos": [
+        -4687.984049806125,
+        -6717.165816792632
+      ],
+      "size": [
+        140,
+        246
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 7
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 8,
+      "type": "ThreeJSRenderNode",
+      "pos": [
+        -5551.876480667385,
+        -6824.415694618593
+      ],
+      "size": [
+        553.3712432416014,
+        999.502889640622
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "camera_config",
+          "type": "CAMERA_CONFIG",
+          "link": 10
+        },
+        {
+          "name": "figure_config",
+          "type": "FIGURE_CONFIG",
+          "link": 29
+        },
+        {
+          "name": "env_config",
+          "shape": 7,
+          "type": "ENV_CONFIG",
+          "link": 11
+        },
+        {
+          "name": "action_list",
+          "shape": 7,
+          "type": "ACTION_LIST",
+          "link": 6
+        },
+        {
+          "name": "initial_config",
+          "type": "INITIAL_CONFIG",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            7,
+            30
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "tdrminglin/ComfyUI_camera_videogen",
+        "ver": "7bdd2040f9e9fc959a931558bae0dcfda88cac95",
+        "Node name for S&R": "ThreeJSRenderNode"
+      },
+      "widgets_values": [
+        81,
+        512,
+        896,
+        16,
+        108931339217823,
+        "randomize",
+        ""
+      ]
+    },
+    {
+      "id": 29,
+      "type": "VHS_VideoCombine",
+      "pos": [
+        -4519.1396657461755,
+        -7000.547219910915
+      ],
+      "size": [
+        220.5830078125,
+        603.020263671875
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 30
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "name": "meta_batch",
+          "shape": 7,
+          "type": "VHS_BatchManager",
+          "link": null
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Filenames",
+          "type": "VHS_FILENAMES",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VHS_VideoCombine"
+      },
+      "widgets_values": {
+        "frame_rate": 16,
+        "loop_count": 0,
+        "filename_prefix": "AnimateDiff",
+        "format": "image/gif",
+        "pingpong": false,
+        "save_output": false,
+        "videopreview": {
+          "hidden": false,
+          "paused": false,
+          "params": {
+            "filename": "AnimateDiff_00001.gif",
+            "subfolder": "",
+            "type": "temp",
+            "format": "image/gif",
+            "frame_rate": 16,
+            "workflow": "AnimateDiff_00001.png",
+            "fullpath": "E:\\ai_models\\ComfyUI-aki-v1.2\\temp\\AnimateDiff_00001.gif"
+          }
+        }
+      }
+    }
+  ],
+  "links": [
+    [
+      6,
+      6,
+      0,
+      8,
+      3,
+      "ACTION_LIST"
+    ],
+    [
+      7,
+      8,
+      0,
+      9,
+      0,
+      "IMAGE"
+    ],
+    [
+      10,
+      12,
+      0,
+      8,
+      0,
+      "CAMERA_CONFIG"
+    ],
+    [
+      11,
+      13,
+      0,
+      8,
+      2,
+      "ENV_CONFIG"
+    ],
+    [
+      18,
+      18,
+      0,
+      6,
+      2,
+      "ACTION_SEGMENT"
+    ],
+    [
+      19,
+      19,
+      0,
+      6,
+      3,
+      "ACTION_SEGMENT"
+    ],
+    [
+      20,
+      20,
+      0,
+      21,
+      0,
+      "HYMOTION_NET"
+    ],
+    [
+      21,
+      22,
+      0,
+      21,
+      1,
+      "HYMOTION_COND"
+    ],
+    [
+      22,
+      23,
+      0,
+      22,
+      0,
+      "HYMOTION_LLM"
+    ],
+    [
+      23,
+      21,
+      0,
+      24,
+      0,
+      "HYMOTION_DATA"
+    ],
+    [
+      24,
+      24,
+      0,
+      6,
+      4,
+      "ACTION_LIST"
+    ],
+    [
+      27,
+      21,
+      0,
+      27,
+      0,
+      "HYMOTION_DATA"
+    ],
+    [
+      28,
+      15,
+      0,
+      6,
+      0,
+      "ACTION_SEGMENT"
+    ],
+    [
+      29,
+      28,
+      0,
+      8,
+      1,
+      "FIGURE_CONFIG"
+    ],
+    [
+      30,
+      8,
+      0,
+      29,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.19084392826761878,
+      "offset": [
+        10284.364249603066,
+        8760.0276058072
+      ]
+    },
+    "frontendVersion": "1.30.6",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

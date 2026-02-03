@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { 
+            margin: 0; overflow: hidden; background-color: #000; color: #fff; font-family: sans-serif;
+            display: flex; justify-content: center; align-items: center; height: 100vh; width: 100vw;
+        }
+        canvas { display: block; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        #status {
+            position: absolute; bottom: 10px; left: 10px; 
+            background: rgba(0,0,0,0.7); padding: 5px 10px; border-radius: 4px;
+            font-size: 12px; pointer-events: none; z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div id="status">Waiting for config...</div>
+    
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+                "fflate": "https://unpkg.com/fflate@0.8.2/esm/browser.js"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+
+        let scene, camera, renderer, figureGroup, ground, gridHelper, envGroup;
+        let ambientLight, dirLight;
+        let mixer; 
+        let clock = new THREE.Clock(); 
+        let config = {}; 
+        let isPreviewing = false;
+        let isRendering = false;
+        let previewReqId;
+        
+        // --- Paths ---
+        const SKYBOX_PATH = "./textures/skybox/"; 
+        const WOODEN_PATH = "./dump_wooden"; 
+        
+        let woodenModelData = null; 
+
+        // --- Retargeting Vars ---
+        let smplSkeletonRoot = null;
+        let smplMixer = null;
+        let boneMap = {}; 
+        let globalInverseScale = 1.0; 
+        const baseFigureHeadRadius = 0.25;
+        const baseFigureBodyHeight = 0.7; 
+
+        // SMPL Constants
+        const SMPL_JOINT_NAMES = [
+            'Pelvis', 'L_Hip', 'R_Hip', 'Spine1', 'L_Knee', 'R_Knee', 'Spine2', 'L_Ankle', 'R_Ankle', 'Spine3', 
+            'L_Foot', 'R_Foot', 'Neck', 'L_Collar', 'R_Collar', 'Head', 'L_Shoulder', 'R_Shoulder', 
+            'L_Elbow', 'R_Elbow', 'L_Wrist', 'R_Wrist', 'L_Hand', 'R_Hand'
+        ];
+        
+        const BONE_MAP_QUERY = {
+            'Pelvis': ['Hips', 'Hip', 'Pelvis', 'Root', 'mixamorig:Hips', 'bip01_pelvis'],
+            'L_Hip':  ['LeftUpLeg', 'L_Hip', 'Left_Hip', 'mixamorig:LeftUpLeg', 'bip01_l_thigh'],
+            'R_Hip':  ['RightUpLeg', 'R_Hip', 'Right_Hip', 'mixamorig:RightUpLeg', 'bip01_r_thigh'],
+            'Spine1': ['Spine', 'Spine1', 'Spine_01', 'mixamorig:Spine', 'bip01_spine'],
+            'L_Knee': ['LeftLeg', 'L_Knee', 'Left_Knee', 'mixamorig:LeftLeg', 'bip01_l_calf'],
+            'R_Knee': ['RightLeg', 'R_Knee', 'Right_Knee', 'mixamorig:RightLeg', 'bip01_r_calf'],
+            'Spine2': ['Spine1', 'Spine2', 'Spine_02', 'mixamorig:Spine1', 'bip01_spine1'],
+            'L_Ankle':['LeftFoot', 'L_Ankle', 'mixamorig:LeftFoot', 'bip01_l_foot'],
+            'R_Ankle':['RightFoot', 'R_Ankle', 'mixamorig:RightFoot', 'bip01_r_foot'],
+            'Spine3': ['Spine2', 'Spine3', 'Chest', 'mixamorig:Spine2', 'bip01_spine2'],
+            'L_Foot': ['LeftToeBase', 'L_Toe', 'L_Foot', 'mixamorig:LeftToeBase'],
+            'R_Foot': ['RightToeBase', 'R_Toe', 'R_Foot', 'mixamorig:RightToeBase'],
+            'Neck':   ['Neck', 'Head_Neck', 'mixamorig:Neck', 'bip01_neck'],
+            'L_Collar':['LeftShoulder', 'L_Clavicle', 'mixamorig:LeftShoulder'],
+            'R_Collar':['RightShoulder', 'R_Clavicle', 'mixamorig:RightShoulder'],
+            'Head':   ['Head', 'mixamorig:Head', 'bip01_head'],
+            'L_Shoulder':['LeftArm', 'L_Shoulder', 'L_Arm', 'mixamorig:LeftArm'],
+            'R_Shoulder':['RightArm', 'R_Shoulder', 'R_Arm', 'mixamorig:RightArm'],
+            'L_Elbow':['LeftForeArm', 'L_Elbow', 'mixamorig:LeftForeArm'],
+            'R_Elbow':['RightForeArm', 'R_Elbow', 'mixamorig:RightForeArm'],
+            'L_Wrist':['LeftHand', 'L_Wrist', 'L_Hand', 'mixamorig:LeftHand'],
+            'R_Wrist':['RightHand', 'R_Wrist', 'R_Hand', 'mixamorig:RightHand']
+        };
+
+        function mulberry32(a) {
+            return function() {
+                var t = a += 0x6D2B79F5;
+                t = Math.imul(t ^ t >>> 15, t | 1);
+                t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+                return ((t ^ t >>> 14) >>> 0) / 4294967296;
+            }
+        }
+
+        const EasingFunctions = {
+            linear: t => t,
+            easeInQuad: t => t * t,
+            easeOutQuad: t => t * (2 - t),
+            easeInOutQuad: t => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t,
+            easeInCubic: t => t * t * t,
+            easeOutCubic: t => (--t) * t * t + 1,
+            easeInOutCubic: t => t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1,
+        };
+        const lerp = (a, b, t) => a * (1 - t) + b * t;
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x333333);
+
+            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+            renderer.setSize(window.innerWidth, window.innerHeight); 
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.useLegacyLights = false; 
+            document.body.appendChild(renderer.domElement);
+
+            ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+            dirLight.position.set(10, 30, 20);
+            dirLight.castShadow = true;
+            dirLight.shadow.mapSize.set(2048, 2048);
+            scene.add(dirLight);
+
+            ground = new THREE.Mesh(
+                new THREE.PlaneGeometry(200, 200),
+                new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.8 })
+            );
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            gridHelper = new THREE.GridHelper(200, 100, 0x000000, 0x404040);
+            gridHelper.position.y = 0.01;
+            gridHelper.material.opacity = 0.5;
+            gridHelper.material.transparent = true;
+            scene.add(gridHelper);
+
+            envGroup = new THREE.Group();
+            scene.add(envGroup);
+
+            regenerateEnvironment(12345);
+            createVirtualSMPLSkeleton();
+
+            window.addEventListener('resize', onWindowResize, false);
+            onWindowResize();
+            renderer.render(scene, camera);
+        }
+
+        function createVirtualSMPLSkeleton() {
+            if(smplSkeletonRoot) scene.remove(smplSkeletonRoot);
+            
+            const SMPL_PARENTS = [-1, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 9, 12, 13, 14, 16, 17, 18, 19, 20, 21];
+            const SMPL_OFFSETS = [
+                [0,0,0], [0.06, -0.06, 0.02], [-0.06, -0.06, 0.02], [0, 0.1, -0.02],
+                [0.05, -0.37, 0], [-0.05, -0.37, 0], [0, 0.12, 0], [0, -0.4, 0], [0, -0.4, 0], [0, 0.11, 0],
+                [0, -0.07, 0.1], [0, -0.07, 0.1], [0, 0.12, -0.02], [0.08, 0.02, 0.02], [-0.08, 0.02, 0.02], [0, 0.1, 0.02],
+                [0.11, -0.02, -0.02], [-0.11, -0.02, -0.02], [0.26, 0, 0], [-0.26, 0, 0],
+                [0.24, 0, 0], [-0.24, 0, 0], [0.08, 0, 0], [-0.08, 0, 0]
+            ];
+            
+            const bones = [];
+            for(let i=0; i<24; i++) {
+                const bone = new THREE.Bone();
+                bone.name = "SMPL_" + SMPL_JOINT_NAMES[i];
+                bones.push(bone);
+            }
+            
+            for(let i=0; i<24; i++) {
+                const parentIdx = SMPL_PARENTS[i];
+                if(parentIdx === -1) {
+                    smplSkeletonRoot = bones[i];
+                } else if(parentIdx < bones.length) {
+                    bones[parentIdx].add(bones[i]);
+                    const o = SMPL_OFFSETS[i];
+                    bones[i].position.set(o[0], o[1], o[2]);
+                }
+            }
+            if(smplSkeletonRoot) {
+                smplSkeletonRoot.visible = false;
+                scene.add(smplSkeletonRoot);
+            }
+        }
+
+        async function loadWoodenData(baseUrl) {
+            console.log('[ThreeJS] Loading Wooden Boy data from:', baseUrl);
+            const files = ['v_template.bin', 'j_template.bin', 'skinWeights.bin', 'skinIndice.bin', 'kintree.bin', 'faces.bin', 'joint_names.json'];
+            const data = {};
+            try {
+                for (const file of files) {
+                    const url = `${baseUrl}/${file}`;
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`Failed to load ${file}: ${response.statusText}`);
+                    if (file.endsWith('.json')) data[file.replace('.json', '')] = await response.json();
+                    else data[file.replace('.bin', '')] = await response.arrayBuffer();
+                }
+                return {
+                    vertices: new Float32Array(data.v_template),
+                    joints: new Float32Array(data.j_template),
+                    weights: new Float32Array(data.skinWeights),
+                    indices: new Uint16Array(data.skinIndice),
+                    parents: new Int32Array(data.kintree),
+                    faces: new Uint16Array(data.faces),
+                    jointNames: data.joint_names
+                };
+            } catch (e) {
+                console.error("[ThreeJS] Error fetching wooden data:", e);
+                throw e;
+            }
+        }
+
+        // [核心修复] 更健壮的骨架构建
+        function buildWoodenSkeleton(joints, parents, jointNames) {
+            // parents (kintree) 是结构真理，决定骨骼数量
+            const numJoints = parents.length;
+            const bones = [];
+            
+            // 1. 创建所有骨骼
+            for (let i = 0; i < numJoints; i++) {
+                const bone = new THREE.Bone();
+                // 增加保护，防止 jointNames 长度不足
+                const name = (jointNames && jointNames[i]) ? jointNames[i] : `Joint_${i}`;
+                bone.name = name;
+                bones.push(bone);
+            }
+            
+            // 2. 构建层级
+            for (let i = 0; i < numJoints; i++) {
+                const parentIdx = parents[i];
+                
+                // 获取位置 (如果 joints 数据不足，默认为 0)
+                const x = joints[i*3] || 0;
+                const y = joints[i*3+1] || 0;
+                const z = joints[i*3+2] || 0;
+
+                if (parentIdx >= 0 && parentIdx < bones.length && parentIdx < i) {
+                    // 添加为子节点
+                    bones[parentIdx].add(bones[i]);
+                    
+                    // 计算相对位置
+                    const px = joints[parentIdx*3] || 0;
+                    const py = joints[parentIdx*3+1] || 0;
+                    const pz = joints[parentIdx*3+2] || 0;
+                    
+                    bones[i].position.set(x - px, y - py, z - pz);
+                } else {
+                    // 根节点 (通常 parentIdx 为 -1)
+                    bones[i].position.set(x, y, z);
+                }
+            }
+            
+            return new THREE.Skeleton(bones);
+        }
+
+        function buildSkinnedMesh(modelData) {
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.BufferAttribute(modelData.vertices, 3));
+            geometry.setIndex(new THREE.BufferAttribute(modelData.faces, 1));
+            geometry.computeVertexNormals();
+
+            const numVerts = modelData.vertices.length / 3;
+            const skinWeights = new Float32Array(numVerts * 4);
+            const skinIndices = new Float32Array(numVerts * 4);
+            for (let i = 0; i < numVerts; i++) {
+                for (let j = 0; j < 4; j++) {
+                    skinWeights[i * 4 + j] = modelData.weights[i * 4 + j];
+                    skinIndices[i * 4 + j] = modelData.indices[i * 4 + j];
+                }
+            }
+            geometry.setAttribute('skinWeight', new THREE.BufferAttribute(skinWeights, 4));
+            geometry.setAttribute('skinIndex', new THREE.BufferAttribute(skinIndices, 4));
+
+            const material = new THREE.MeshStandardMaterial({
+                color: 0xccaa88, metalness: 0.1, roughness: 0.8, side: THREE.DoubleSide
+            });
+            
+            const textureLoader = new THREE.TextureLoader();
+            // 使用相对路径加载，即使失败也不报错
+            textureLoader.load(WOODEN_PATH + '/Boy_lambert4_BaseColor.webp', (tex) => {
+                tex.flipY = false; tex.colorSpace = THREE.SRGBColorSpace;
+                material.map = tex; material.needsUpdate = true;
+            }, undefined, (e) => { console.log("Texture load skipped"); });
+
+            const skeleton = buildWoodenSkeleton(modelData.joints, modelData.parents, modelData.jointNames);
+            const mesh = new THREE.SkinnedMesh(geometry, material);
+            
+            // 必须把根骨骼加到 Mesh 中，否则 Three.js 渲染会报错或不显示
+            if (skeleton.bones.length > 0) {
+                mesh.add(skeleton.bones[0]);
+                mesh.bind(skeleton);
+            }
+            
+            return { mesh, skeleton };
+        }
+
+        // [核心修复] Wooden Clip 构建 (增加安全检查)
+        function createWoodenClip(motionData, skeleton) {
+            const { quaternions, translations, frames, joints, fps } = motionData;
+            const times = [];
+            for (let i = 0; i < frames; i++) times.push(i / (fps || 30));
+
+            const tracks = [];
+            
+            if (skeleton.bones.length > 0) {
+                // Root Position
+                const rootPos = [];
+                for (let i = 0; i < frames; i++) {
+                    rootPos.push(translations[i*3], translations[i*3+1], translations[i*3+2]);
+                }
+                tracks.push(new THREE.VectorKeyframeTrack(
+                    `${skeleton.bones[0].name}.position`,
+                    times,
+                    rootPos
+                ));
+            }
+
+            // Rotations
+            // 修复：木头人只有24个骨骼，但HY数据可能有52个。取最小值防止越界。
+            const loopCount = Math.min(joints, skeleton.bones.length);
+            
+            for (let j = 0; j < loopCount; j++) {
+                const bone = skeleton.bones[j];
+                if (!bone) continue; // Safety check
+
+                const quats = [];
+                for (let i = 0; i < frames; i++) {
+                    const idx = (i * joints + j) * 4;
+                    quats.push(
+                        quaternions[idx], quaternions[idx+1], 
+                        quaternions[idx+2], quaternions[idx+3]
+                    );
+                }
+                tracks.push(new THREE.QuaternionKeyframeTrack(
+                    `${bone.name}.quaternion`,
+                    times,
+                    quats
+                ));
+            }
+            
+            return new THREE.AnimationClip("WoodenMotion", -1, tracks);
+        }
+
+        function onWindowResize() {
+            if (isRendering) return;
+            let targetAspect = window.innerWidth / window.innerHeight;
+            if (config.width && config.height) targetAspect = config.width / config.height;
+            const winW = window.innerWidth, winH = window.innerHeight, winAspect = winW/winH;
+            let fW, fH;
+            if (winAspect > targetAspect) { fH = winH; fW = fH * targetAspect; } 
+            else { fW = winW; fH = fW / targetAspect; }
+            camera.aspect = targetAspect; 
+            camera.updateProjectionMatrix();
+            renderer.setSize(fW, fH);
+        }
+
+        function regenerateEnvironment(seed) {
+            while(envGroup.children.length > 0){ 
+                const obj = envGroup.children[0];
+                obj.geometry?.dispose(); obj.material?.dispose();
+                envGroup.remove(obj); 
+            }
+            const rand = mulberry32(seed); 
+            const distMat = new THREE.MeshStandardMaterial({ color: 0x95a5a6, roughness: 0.9 });
+            for (let i = 0; i < 40; i++) {
+                const s = rand() * 5 + 2; 
+                const angle = rand() * Math.PI * 2;
+                const dist = 60 * (0.2 + rand() * 0.8); 
+                const box = new THREE.Mesh(new THREE.BoxGeometry(s, s, s), distMat);
+                box.position.set(Math.cos(angle) * dist, s / 2, Math.sin(angle) * dist);
+                box.castShadow = true; box.receiveShadow = true; envGroup.add(box);
+            }
+            const pillarGeo = new THREE.BoxGeometry(1, 10, 1);
+            const pillarMat = new THREE.MeshStandardMaterial({color: 0xff5555});
+            [[-15, -15], [15, 15], [-15, 15], [15, -15]].forEach(pos => {
+                const p = new THREE.Mesh(pillarGeo, pillarMat);
+                p.position.set(pos[0], 5, pos[1]);
+                p.castShadow = true; p.receiveShadow = true; envGroup.add(p);
+            });
+        }
+
+        function setupEnvironment(cfg) {
+            const type = cfg.skyboxType || "None (Gray)";
+            gridHelper.visible = true; 
+            if (type === "Texture Skybox (Folder)") {
+                const loader = new THREE.CubeTextureLoader();
+                loader.setPath(SKYBOX_PATH);
+                loader.load(['px.png', 'nx.png', 'py.png', 'ny.png', 'pz.png', 'nz.png'],
+                    (texture) => { scene.background = texture; scene.environment = texture; scene.fog = null; renderer.render(scene, camera); },
+                    undefined, () => { scene.background = new THREE.Color(0x444444); }
+                );
+            } else if (type === "Simple Sky (Blue)") {
+                scene.background = new THREE.Color(0x87CEEB); scene.environment = null; scene.fog = new THREE.Fog(0x87CEEB, 20, 100);
+            } else {
+                scene.background = new THREE.Color(0x444444); scene.environment = null; scene.fog = null;
+            }
+        }
+
+        // [补全] createProceduralFigure 定义
+        function createProceduralFigure(cfg) {
+            const scale = cfg.scale || 1.0;
+            const limbLen = (cfg.limbLength || 0.6) * scale;
+            const headR = baseFigureHeadRadius * scale;
+            const bodyH = baseFigureBodyHeight * scale;
+            const bodyW = 0.5 * scale;
+            const bodyD = 0.25 * scale;
+            const limbR = 0.08 * scale;
+            const matYellow = new THREE.MeshStandardMaterial({ color: 0xffff00 });
+            const matGreen = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+            const matRed = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+            const legCenterY = limbLen / 2;
+            const bodyCenterY = limbLen + bodyH / 2;
+            const headCenterY = limbLen + bodyH + headR;
+            const head = new THREE.Mesh(new THREE.SphereGeometry(headR, 16, 16), matYellow);
+            head.position.y = headCenterY; head.castShadow = true; figureGroup.add(head);
+            const body = new THREE.Mesh(new THREE.BoxGeometry(bodyW, bodyH, bodyD), matGreen);
+            body.position.y = bodyCenterY; body.castShadow = true; figureGroup.add(body);
+            const limbGeo = new THREE.CylinderGeometry(limbR, limbR, limbLen, 8);
+            const armY = bodyCenterY + bodyH/2 - limbR; const armX = bodyW/2 + limbR;
+            const lArm = new THREE.Mesh(limbGeo, matRed); lArm.position.set(-armX, armY-limbLen/2, 0); figureGroup.add(lArm);
+            const rArm = new THREE.Mesh(limbGeo, matRed); rArm.position.set(armX, armY-limbLen/2, 0); figureGroup.add(rArm);
+            const legX = bodyW/4;
+            const lLeg = new THREE.Mesh(limbGeo, matRed); lLeg.position.set(-legX, legCenterY, 0); figureGroup.add(lLeg);
+            const rLeg = new THREE.Mesh(limbGeo, matRed); rLeg.position.set(legX, legCenterY, 0); figureGroup.add(rLeg);
+        }
+
+        async function setupFigure(cfg, hyData = null) {
+            if (figureGroup) scene.remove(figureGroup);
+            figureGroup = new THREE.Group();
+            scene.add(figureGroup);
+            if (mixer) { mixer.stopAllAction(); mixer = null; }
+
+            if (cfg.mode === "wooden") {
+                document.getElementById('status').innerText = "Loading Wooden Boy...";
+                try {
+                    if (!woodenModelData) woodenModelData = await loadWoodenData(WOODEN_PATH);
+                    const { mesh, skeleton } = buildSkinnedMesh(woodenModelData);
+                    const scale = cfg.scale || 1.0;
+                    mesh.scale.setScalar(scale);
+                    mesh.castShadow = true; mesh.receiveShadow = true;
+                    figureGroup.add(mesh);
+                    if (hyData) {
+                        mixer = new THREE.AnimationMixer(mesh);
+                        const clip = createWoodenClip(hyData, skeleton);
+                        const action = mixer.clipAction(clip);
+                        action.play();
+                    }
+                    document.getElementById('status').innerText = "Wooden Boy Ready.";
+                    return;
+                } catch (e) {
+                    console.error(e);
+                    document.getElementById('status').innerText = "Wooden Boy Failed: " + e.message;
+                    createProceduralFigure(cfg);
+                    return;
+                }
+            }
+
+            if (cfg.modelUrl && cfg.modelUrl.length > 5 && cfg.modelUrl !== "none") {
+                 document.getElementById('status').innerText = "Loading external model...";
+                 try {
+                    let model;
+                    let animations = [];
+                    const urlLower = cfg.modelUrl.toLowerCase();
+                    if (urlLower.endsWith('.fbx')) {
+                        const loader = new FBXLoader();
+                        model = await loader.loadAsync(cfg.modelUrl);
+                        animations = model.animations;
+                    } else {
+                        const loader = new GLTFLoader();
+                        const gltf = await loader.loadAsync(cfg.modelUrl);
+                        model = gltf.scene;
+                        animations = gltf.animations;
+                    }
+                    
+                    // Normalize
+                    model.position.set(0,0,0); model.rotation.set(0,0,0); model.scale.set(1,1,1); model.updateMatrixWorld(true);
+                    const box = new THREE.Box3().setFromObject(model);
+                    const size = new THREE.Vector3(); box.getSize(size);
+                    const REFERENCE_HEIGHT = 1.8;
+                    const rawHeight = size.y || 1.0; 
+                    const normalizeScale = REFERENCE_HEIGHT / rawHeight;
+                    const finalScale = normalizeScale * (cfg.scale || 1.0);
+                    globalInverseScale = 1.0 / finalScale; 
+                    model.scale.setScalar(finalScale); model.updateMatrixWorld(true);
+                    const newBox = new THREE.Box3().setFromObject(model);
+                    const center = new THREE.Vector3(); newBox.getCenter(center);
+                    model.position.x = -center.x; model.position.z = -center.z; model.position.y = -newBox.min.y;
+                    
+                    model.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
+                    figureGroup.add(model);
+
+                    let animApplied = false;
+                    if (hyData) {
+                        calculateRetargetOffsets(model);
+                        animApplied = applyHyMotionData(hyData, globalInverseScale);
+                    }
+                    if (!animApplied && animations && animations.length > 0) {
+                        mixer = new THREE.AnimationMixer(model);
+                        const animIndex = Math.min(cfg.animIndex || 0, animations.length - 1);
+                        const clip = animations[animIndex];
+                        const action = mixer.clipAction(clip);
+                        action.timeScale = (cfg.timeScale !== undefined) ? cfg.timeScale : 1.0;
+                        action.play();
+                    }
+                    document.getElementById('status').innerText = "Model loaded.";
+                    return;
+                 } catch(e) {
+                     console.error(e);
+                     document.getElementById('status').innerText = "Model load failed.";
+                 }
+            }
+            createProceduralFigure(cfg);
+        }
+        
+        function applyHyMotionData(hyData, inverseScale) {
+             if (!hyData) return false;
+             createVirtualSMPLSkeleton();
+             if (smplMixer) smplMixer.stopAllAction();
+             smplMixer = new THREE.AnimationMixer(smplSkeletonRoot);
+             const frames = hyData.frames; const joints = hyData.joints; const fps = hyData.fps || 30;
+             const times = []; for(let i=0; i<frames; i++) times.push(i/fps);
+             const tracks = [];
+             const rootPos = [];
+             for(let i=0; i<frames; i++) rootPos.push(hyData.translations[i*3]*inverseScale, hyData.translations[i*3+1]*inverseScale, hyData.translations[i*3+2]*inverseScale);
+             tracks.push(new THREE.VectorKeyframeTrack('SMPL_Pelvis.position', times, rootPos));
+             for(let j=0; j<24; j++) {
+                 const name = "SMPL_" + SMPL_JOINT_NAMES[j];
+                 const quats = [];
+                 for(let i=0; i<frames; i++) {
+                     const idx = (i*joints + j)*4;
+                     quats.push(hyData.quaternions[idx], hyData.quaternions[idx+1], hyData.quaternions[idx+2], hyData.quaternions[idx+3]);
+                 }
+                 tracks.push(new THREE.QuaternionKeyframeTrack(`${name}.quaternion`, times, quats));
+             }
+             const clip = new THREE.AnimationClip("Retarget", -1, tracks);
+             smplMixer.clipAction(clip).play();
+             return true;
+        }
+
+        function calculateRetargetOffsets(model) {
+            boneMap = {};
+            const modelBones = {};
+            model.traverse(o => { if (o.isBone) modelBones[o.name] = o; });
+            for (let i = 0; i < 24; i++) {
+                const smplName = SMPL_JOINT_NAMES[i];
+                const candidates = BONE_MAP_QUERY[smplName];
+                if (candidates) {
+                    for (const cand of candidates) {
+                        const found = Object.keys(modelBones).find(name => name.toLowerCase().includes(cand.toLowerCase()));
+                        if (found) { boneMap[smplName] = modelBones[found]; break; }
+                    }
+                }
+            }
+        }
+
+        function retargetSkeleton() {
+             if (!smplSkeletonRoot) return;
+             for (let i = 0; i < 24; i++) {
+                 const smplName = SMPL_JOINT_NAMES[i];
+                 const smplNode = smplSkeletonRoot.getObjectByName("SMPL_" + smplName);
+                 const targetBone = boneMap[smplName];
+                 if (smplNode && targetBone) {
+                     const q = new THREE.Quaternion();
+                     smplNode.getWorldQuaternion(q);
+                     if (targetBone.parent) {
+                         const pq = new THREE.Quaternion();
+                         targetBone.parent.getWorldQuaternion(pq);
+                         targetBone.quaternion.copy(pq.invert().multiply(q));
+                     } else {
+                         targetBone.quaternion.copy(q);
+                         if (smplName === 'Pelvis') {
+                             const p = new THREE.Vector3();
+                             smplNode.getWorldPosition(p);
+                             if(targetBone.parent) {
+                                 const worldP = p.clone().multiplyScalar(globalInverseScale);
+                                 targetBone.parent.worldToLocal(worldP);
+                                 targetBone.position.copy(worldP);
+                             } else {
+                                targetBone.position.copy(p).multiplyScalar(globalInverseScale);
+                             }
+                         }
+                     }
+                 }
+             }
+        }
+        
+        function calculateFrameState(frame, cfg) {
+            let state = { figX:0, figY:0, figZ:0, figRot:0, dist:cfg.initialDistance, elev:cfg.initialElevationDeg*(Math.PI/180), azim:cfg.initialAzimuthDeg*(Math.PI/180), panX:0, panY:0, fov:cfg.fov, roll:0 };
+            const apply = (segs) => {
+                if (!segs) return;
+                segs.slice().sort((a,b)=>a.startFrame-b.startFrame).forEach(seg=>{
+                    let val = null;
+                    if(frame>=seg.endFrame) val=seg.endValue;
+                    else if(frame>=seg.startFrame) {
+                        const t = EasingFunctions[seg.easing]( (frame-seg.startFrame)/(seg.endFrame-seg.startFrame) );
+                        val = lerp(seg.startValue, seg.endValue, t);
+                    }
+                    if(val!==null) {
+                        if(seg.type==='x_pos') state.figX=val; else if(seg.type==='y_pos') state.figY=val; else if(seg.type==='z_pos') state.figZ=val;
+                        else if(seg.type==='rotation_y') state.figRot=val*(Math.PI/180); else if(seg.type==='distance') state.dist=val;
+                        else if(seg.type==='panX') state.panX=val; else if(seg.type==='panY') state.panY=val;
+                        else if(seg.type==='fov') state.fov=val; else if(seg.type==='elevation') state.elev=val*(Math.PI/180);
+                        else if(seg.type==='azimuth') state.azim=val*(Math.PI/180); else if(seg.type==='roll') state.roll=val*(Math.PI/180);
+                    }
+                });
+            };
+            apply(cfg.figureSegments); apply(cfg.cameraSegments);
+            return state;
+        }
+
+        function updateScene(state, cfg) {
+            figureGroup.position.set(state.figX, state.figY, state.figZ);
+            figureGroup.rotation.y = state.figRot;
+            const followMode = cfg.cameraFollowMode || 'follow';
+            const basePos = (followMode === 'follow') ? figureGroup.position.clone() : new THREE.Vector3(0,0,0);
+            const lookAt = new THREE.Vector3(basePos.x+state.panX, basePos.y+1.0+(cfg.lookAtHeightOffset||0)+state.panY, basePos.z);
+            let elev = Math.max(-Math.PI/2+0.01, Math.min(Math.PI/2-0.01, state.elev));
+            let dist = Math.max(0.1, state.dist);
+            camera.position.set(
+                lookAt.x + dist * Math.cos(elev) * Math.sin(state.azim),
+                lookAt.y + dist * Math.sin(elev),
+                lookAt.z + dist * Math.cos(elev) * Math.cos(state.azim)
+            );
+            camera.up.set(0,1,0); camera.lookAt(lookAt);
+            if(state.roll!==0) {
+                const fwd = new THREE.Vector3().subVectors(lookAt, camera.position).normalize();
+                camera.up.applyQuaternion(new THREE.Quaternion().setFromAxisAngle(fwd, state.roll));
+                camera.lookAt(lookAt);
+            }
+        }
+
+        function extractHyMotionData(cfg) {
+            if(cfg.figureSegments) {
+                const s = cfg.figureSegments.find(s=>s.type==='hymotion_clip');
+                if(s) return s.data;
+            }
+            return null;
+        }
+
+        async function renderBatch(newConfig) {
+            config = newConfig; isRendering=true;
+            renderer.setSize(config.width, config.height);
+            camera.aspect = config.width/config.height; camera.updateProjectionMatrix();
+            regenerateEnvironment(config.seed||123); setupEnvironment(config);
+            await setupFigure(config, extractHyMotionData(config));
+            const frames = []; const fps = config.fps||30;
+            for(let i=0; i<config.numFrames; i++) {
+                const state = calculateFrameState(i, config);
+                updateScene(state, config);
+                if(config.mode==='wooden' && mixer) mixer.setTime(i/fps);
+                else if(smplMixer) { smplMixer.setTime(i/fps); retargetSkeleton(); }
+                renderer.render(scene, camera);
+                frames.push(renderer.domElement.toDataURL("image/png"));
+                if(i%10===0) await new Promise(r=>setTimeout(r,0));
+            }
+            window.parent.postMessage({ type: "RENDER_RESULT", request_id: config.request_id, images: frames }, "*");
+            isRendering=false; onWindowResize();
+        }
+        
+        function startPreviewLoop() {
+            if(isPreviewing) { isPreviewing=false; cancelAnimationFrame(previewReqId); return; }
+            if(!config.numFrames) return;
+            isPreviewing=true; onWindowResize();
+            setupFigure(config, extractHyMotionData(config));
+            let frame=0; const fps=config.fps||30;
+            function loop() {
+                if(!isPreviewing) return;
+                const state = calculateFrameState(frame, config);
+                updateScene(state, config);
+                if(config.mode==='wooden' && mixer) mixer.setTime(frame/fps);
+                else if(smplMixer) { smplMixer.setTime(frame/fps); retargetSkeleton(); }
+                renderer.render(scene, camera);
+                frame = (frame+1)%config.numFrames;
+                setTimeout(()=>{ previewReqId=requestAnimationFrame(loop); }, 1000/fps);
+            }
+            loop();
+        }
+
+        window.addEventListener('message', (e) => {
+            if(e.data.type === "RENDER_BATCH") { isPreviewing=false; cancelAnimationFrame(previewReqId); renderBatch(e.data.config); }
+            else if(e.data.type === "START_PREVIEW") { if(e.data.config) config=e.data.config; startPreviewLoop(); }
+        });
+
+        init();
+
+    </script>
+</body>
+</html>

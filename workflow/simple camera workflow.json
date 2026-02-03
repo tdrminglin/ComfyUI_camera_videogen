@@ -1,0 +1,520 @@
+{
+  "id": "acefbc8a-c7f9-43d0-947b-ab5115ff290f",
+  "revision": 0,
+  "last_node_id": 19,
+  "last_link_id": 19,
+  "nodes": [
+    {
+      "id": 12,
+      "type": "ThreeJSCameraConfig",
+      "pos": [
+        -6654.793898717229,
+        -7614.722284452407
+      ],
+      "size": [
+        270,
+        178
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "cam_config",
+          "type": "CAMERA_CONFIG",
+          "links": [
+            10
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ThreeJSCameraConfig"
+      },
+      "widgets_values": [
+        "follow",
+        0,
+        7,
+        10,
+        0,
+        50
+      ]
+    },
+    {
+      "id": 14,
+      "type": "ThreeJSFigureConfig",
+      "pos": [
+        -6645.906938019966,
+        -7352.49120260659
+      ],
+      "size": [
+        270,
+        130
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "fig_config",
+          "type": "FIGURE_CONFIG",
+          "links": [
+            12
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ThreeJSFigureConfig"
+      },
+      "widgets_values": [
+        1,
+        0.6,
+        true,
+        "none"
+      ]
+    },
+    {
+      "id": 13,
+      "type": "ThreeJSEnvironment",
+      "pos": [
+        -6651.084856020077,
+        -7138.030085315174
+      ],
+      "size": [
+        270,
+        58
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "env_config",
+          "type": "ENV_CONFIG",
+          "links": [
+            11
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ThreeJSEnvironment"
+      },
+      "widgets_values": [
+        "Texture Skybox (Folder)"
+      ]
+    },
+    {
+      "id": 6,
+      "type": "ThreeJSActionCombiner",
+      "pos": [
+        -6259.292442959078,
+        -6698.2380607098785
+      ],
+      "size": [
+        165.175390625,
+        186
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "action_1",
+          "type": "ACTION_SEGMENT",
+          "link": 16
+        },
+        {
+          "name": "action_2",
+          "shape": 7,
+          "type": "ACTION_SEGMENT",
+          "link": 17
+        },
+        {
+          "name": "action_3",
+          "shape": 7,
+          "type": "ACTION_SEGMENT",
+          "link": 18
+        },
+        {
+          "name": "action_4",
+          "shape": 7,
+          "type": "ACTION_SEGMENT",
+          "link": 19
+        },
+        {
+          "name": "previous_list",
+          "shape": 7,
+          "type": "ACTION_LIST",
+          "link": null
+        },
+        {
+          "name": "segment_1",
+          "type": "ACTION_SEGMENT",
+          "link": null
+        },
+        {
+          "name": "segment_2",
+          "shape": 7,
+          "type": "ACTION_SEGMENT",
+          "link": null
+        },
+        {
+          "name": "segment_3",
+          "shape": 7,
+          "type": "ACTION_SEGMENT",
+          "link": null
+        },
+        {
+          "name": "segment_4",
+          "shape": 7,
+          "type": "ACTION_SEGMENT",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "action_list",
+          "type": "ACTION_LIST",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ThreeJSActionCombiner"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 9,
+      "type": "PreviewImage",
+      "pos": [
+        -4687.984049806125,
+        -6717.165816792632
+      ],
+      "size": [
+        140,
+        246
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 7
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 16,
+      "type": "ThreeJSFigureAction",
+      "pos": [
+        -7082.258044337116,
+        -6532.493529733859
+      ],
+      "size": [
+        270,
+        178
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "figure_action",
+          "type": "ACTION_SEGMENT",
+          "links": [
+            16
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ThreeJSFigureAction"
+      },
+      "widgets_values": [
+        "rotation_y (转身/旋转)",
+        0,
+        30,
+        0,
+        90,
+        "linear"
+      ]
+    },
+    {
+      "id": 18,
+      "type": "ThreeJSFigureAction",
+      "pos": [
+        -7081.989011898071,
+        -6288.2680762829605
+      ],
+      "size": [
+        270,
+        178
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "figure_action",
+          "type": "ACTION_SEGMENT",
+          "links": [
+            18
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ThreeJSFigureAction"
+      },
+      "widgets_values": [
+        "x_pos (左右移动)",
+        45,
+        60,
+        0,
+        25,
+        "linear"
+      ]
+    },
+    {
+      "id": 15,
+      "type": "ThreeJSCameraAction",
+      "pos": [
+        -7169.606575202666,
+        -7009.98964678689
+      ],
+      "size": [
+        270,
+        178
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "camera_action",
+          "type": "ACTION_SEGMENT",
+          "links": [
+            17
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ThreeJSCameraAction"
+      },
+      "widgets_values": [
+        "azimuth (方位角/环绕)",
+        0,
+        30,
+        0,
+        80,
+        "linear"
+      ]
+    },
+    {
+      "id": 19,
+      "type": "ThreeJSCameraAction",
+      "pos": [
+        -7155.639987745503,
+        -6788.21718630308
+      ],
+      "size": [
+        270,
+        178
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "camera_action",
+          "type": "ACTION_SEGMENT",
+          "links": [
+            19
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ThreeJSCameraAction"
+      },
+      "widgets_values": [
+        "distance (距离)",
+        45,
+        60,
+        7,
+        3,
+        "linear"
+      ]
+    },
+    {
+      "id": 8,
+      "type": "ThreeJSRenderNode",
+      "pos": [
+        -5828.83203622294,
+        -6776.015694618593
+      ],
+      "size": [
+        872.2335076850868,
+        819.2834291358022
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "camera_config",
+          "type": "CAMERA_CONFIG",
+          "link": 10
+        },
+        {
+          "name": "figure_config",
+          "type": "FIGURE_CONFIG",
+          "link": 12
+        },
+        {
+          "name": "env_config",
+          "shape": 7,
+          "type": "ENV_CONFIG",
+          "link": 11
+        },
+        {
+          "name": "action_list",
+          "shape": 7,
+          "type": "ACTION_LIST",
+          "link": 6
+        },
+        {
+          "name": "initial_config",
+          "type": "INITIAL_CONFIG",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            7
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ThreeJSRenderNode"
+      },
+      "widgets_values": [
+        81,
+        512,
+        896,
+        16,
+        162441031360417,
+        "randomize",
+        ""
+      ]
+    }
+  ],
+  "links": [
+    [
+      6,
+      6,
+      0,
+      8,
+      3,
+      "ACTION_LIST"
+    ],
+    [
+      7,
+      8,
+      0,
+      9,
+      0,
+      "IMAGE"
+    ],
+    [
+      10,
+      12,
+      0,
+      8,
+      0,
+      "CAMERA_CONFIG"
+    ],
+    [
+      11,
+      13,
+      0,
+      8,
+      2,
+      "ENV_CONFIG"
+    ],
+    [
+      12,
+      14,
+      0,
+      8,
+      1,
+      "FIGURE_CONFIG"
+    ],
+    [
+      16,
+      16,
+      0,
+      6,
+      0,
+      "ACTION_SEGMENT"
+    ],
+    [
+      17,
+      15,
+      0,
+      6,
+      1,
+      "ACTION_SEGMENT"
+    ],
+    [
+      18,
+      18,
+      0,
+      6,
+      2,
+      "ACTION_SEGMENT"
+    ],
+    [
+      19,
+      19,
+      0,
+      6,
+      3,
+      "ACTION_SEGMENT"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.876922695000001,
+      "offset": [
+        7462.50797860552,
+        7753.354603451685
+      ]
+    },
+    "frontendVersion": "1.30.6",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

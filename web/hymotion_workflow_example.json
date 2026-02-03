@@ -1,0 +1,57 @@
+{
+  "id": "hymotion_workflow_example",
+  "nodes": [
+    {
+      "id": 1,
+      "type": "ThreeJSCameraConfig",
+      "pos": [100, 200],
+      "widgets_values": ["follow", 0, 8, 15, 0, 50]
+    },
+    {
+      "id": 2,
+      "type": "ThreeJSHYMotionFigureConfig",
+      "pos": [100, 400],
+      "widgets_values": ["wooden", 1.0, true, false]
+    },
+    {
+      "id": 3,
+      "type": "ThreeJSEnvironment",
+      "pos": [100, 550],
+      "widgets_values": ["Grid Only"]
+    },
+    {
+      "id": 4,
+      "type": "ThreeJSHYMotionImport",
+      "pos": [400, 300],
+      "widgets_values": ["motion_data_placeholder", 0, 1.0]
+    },
+    {
+      "id": 5,
+      "type": "ThreeJSActionCombiner",
+      "pos": [700, 300],
+      "widgets_values": []
+    },
+    {
+      "id": 6,
+      "type": "ThreeJSRenderNode",
+      "pos": [1000, 300],
+      "widgets_values": [60, 512, 512, 30, 0]
+    }
+  ],
+  "links": [
+    [1, "ThreeJSCameraConfig", 0, 6, 0, "CAMERA_CONFIG"],
+    [2, "ThreeJSHYMotionFigureConfig", 0, 6, 1, "FIGURE_CONFIG"],
+    [3, "ThreeJSEnvironment", 0, 6, 2, "ENV_CONFIG"],
+    [4, "ThreeJSHYMotionImport", 0, 5, 0, "ACTION_LIST"],
+    [5, "ThreeJSActionCombiner", 0, 6, 3, "ACTION_LIST"]
+  ],
+  "comments": {
+    "说明": "这是一个使用 HY-Motion 内置模型的示例工作流",
+    "步骤": [
+      "1. 使用 ThreeJSCameraConfig 配置相机",
+      "2. 使用 ThreeJSHYMotionFigureConfig 选择 'wooden' 模型",
+      "3. 使用 ThreeJSHYMotionImport 导入 HY-Motion 生成的运动数据",
+      "4. 连接所有节点到 ThreeJSRenderNode 进行渲染"
+    ]
+  }
+}

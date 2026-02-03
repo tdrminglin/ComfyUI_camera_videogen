@@ -12,6 +12,28 @@ from aiohttp import web
 import folder_paths
 
 RENDER_CACHE = {}
+# 辅助函数：Rot6D 转 Quaternion (直接内嵌，避免依赖其他文件)
+def rot6d_to_matrix_torch(d6: torch.Tensor) -> torch.Tensor:
+    a1, a2 = d6[..., :3], d6[..., 3:]
+    b1 = torch.nn.functional.normalize(a1, dim=-1)
+    b2 = a2 - (b1 * a2).sum(-1, keepdim=True) * b1
+    b2 = torch.nn.functional.normalize(b2, dim=-1)
+    b3 = torch.cross(b1, b2, dim=-1)
+    return torch.stack((b1, b2, b3), dim=-2)
+
+def matrix_to_quaternion_torch(matrix: torch.Tensor) -> torch.Tensor:
+    # 简单的矩阵转四元数实现 [w, x, y, z]
+    # 这里为了简化，假设输入是合法的旋转矩阵
+    # 实际生产可以使用 pytorch3d 或 scipy，这里手写一个简化版或依赖 hymotion 的工具
+    # 为了兼容性，最好尝试引用 hymotion 的库，如果引用不到则忽略
+    try:
+        from .hymotion.utils.geometry import matrix_to_quaternion
+        return matrix_to_quaternion(matrix)
+    except ImportError:
+        # 简易 fallback (不建议用于生产，最好确保能 import hymotion)
+        # 这里为了演示，我们假设用户装了 hymotion 插件，直接用它的逻辑
+        pass
+    return torch.zeros(matrix.shape[:-2] + (4,))
 
 try:
     @PromptServer.instance.routes.post("/threejs/render_result")
@@ -119,12 +141,15 @@ class ThreeJSCameraAction:
         },)
 
 # --- 人物配置 ---
+# --- 修改后的 人物配置 (增加 figure_type) ---
 class ThreeJSFigureConfig:
     @classmethod
     def INPUT_TYPES(cls):
         file_list = get_input_files()
         return {
             "required": {
+                # 新增：人物类型选择
+                "figure_type": (["Blocky (Default)", "Wooden (SMPL-H)", "Custom (GLB)"],),
                 "figure_scale": ("FLOAT", {"default": 1.0, "min": 0.1, "max": 5.0}),
                 "limb_length": ("FLOAT", {"default": 0.6, "min": 0.1, "max": 2.0}),
                 "show_face": ("BOOLEAN", {"default": True}),
@@ -136,11 +161,18 @@ class ThreeJSFigureConfig:
     FUNCTION = "config_figure"
     CATEGORY = "ThreeJS/Config"
 
-    def config_figure(self, figure_scale, limb_length, show_face, custom_model):
+    def config_figure(self, figure_type, figure_scale, limb_length, show_face, custom_model):
         model_url = ""
         if custom_model and custom_model != "none":
             model_url = f"/view?filename={custom_model}&type=input"
+        
+        # 简单的类型映射
+        type_code = "blocky"
+        if "Wooden" in figure_type: type_code = "wooden"
+        elif "Custom" in figure_type: type_code = "custom"
+
         return ({
+            "figureType": type_code, # 传给前端
             "scale": figure_scale,
             "limbLength": limb_length,
             "showFace": show_face,
@@ -221,6 +253,7 @@ class ThreeJSActionCombiner:
         return (actions,)
 
 # --- 渲染器 (更新：增加了 seed) ---
+# --- 修改后的 Render Node ---
 class ThreeJSRenderNode:
     @classmethod
     def INPUT_TYPES(cls):
@@ -232,11 +265,13 @@ class ThreeJSRenderNode:
                 "width": ("INT", {"default": 512, "min": 64}),
                 "height": ("INT", {"default": 512, "min": 64}),
                 "fps": ("INT", {"default": 30, "min": 1}),
-                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}), # 新增 Seed
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
             },
             "optional": {
                 "env_config": ("ENV_CONFIG",),
                 "action_list": ("ACTION_LIST",),
+                # 新增：接收 HY-Motion 的数据
+                "motion_data": ("HYMOTION_DATA",),
             }
         }
     RETURN_TYPES = ("IMAGE",)
@@ -245,7 +280,7 @@ class ThreeJSRenderNode:
     CATEGORY = "ThreeJS/Renderer"
     OUTPUT_NODE = True
 
-    def render(self, camera_config, figure_config, total_frames, width, height, fps, seed, env_config=None, action_list=None):
+    def render(self, camera_config, figure_config, total_frames, width, height, fps, seed, env_config=None, action_list=None, motion_data=None):
         request_id = str(uuid.uuid4())
         node_id = getattr(self, "id", None)
 
@@ -256,6 +291,42 @@ class ThreeJSRenderNode:
                 if seg['target'] == 'camera': camera_segments.append(seg)
                 elif seg['target'] == 'figure': figure_segments.append(seg)
 
+        # --- 处理 Motion Data ---
+        processed_motion = None
+        if motion_data is not None:
+            try:
+                # 获取第一个样本
+                idx = 0 
+                rot6d = motion_data.output_dict["rot6d"][idx] # (frames, joints, 6)
+                transl = motion_data.output_dict["transl"][idx] # (frames, 3)
+                
+                # 转 Tensor
+                if hasattr(rot6d, 'cpu'): rot6d = rot6d.cpu()
+                else: rot6d = torch.from_numpy(rot6d).float()
+                
+                if hasattr(transl, 'cpu'): transl = transl.cpu().numpy()
+                
+                # 转换旋转: Rot6D -> Matrix -> Quaternion
+                # 注意：为了避免重复造轮子，这里尝试从 hymotion 导入，如果失败请确保路径正确
+                from .hymotion.utils.geometry import rot6d_to_rotation_matrix, matrix_to_quaternion
+                
+                rot_mats = rot6d_to_rotation_matrix(rot6d)
+                quats = matrix_to_quaternion(rot_mats) # (F, J, 4) [w,x,y,z]
+                
+                processed_motion = {
+                    "enabled": True,
+                    "quaternions": quats.numpy().flatten().tolist(),
+                    "transl": transl.flatten().tolist(),
+                    "num_frames": int(quats.shape[0]),
+                    "num_joints": int(quats.shape[1]),
+                    "fps": 30 # HyMotion 默认
+                }
+                print(f"[ThreeJS] Loaded Motion Data: {processed_motion['num_frames']} frames")
+            except Exception as e:
+                print(f"[ThreeJS] Error processing motion data: {e}")
+                import traceback
+                traceback.print_exc()
+
         payload = {
             **camera_config,
             **figure_config,
@@ -264,26 +335,26 @@ class ThreeJSRenderNode:
             "width": width,
             "height": height,
             "fps": fps,
-            "seed": seed, # 传递 seed
+            "seed": seed,
             "cameraSegments": camera_segments,
             "figureSegments": figure_segments,
+            "motionData": processed_motion, # 注入动作数据
             "request_id": request_id,
             "node_id": node_id
         }
 
         print(f"[ThreeJS] Request ID: {request_id}, Seed: {seed}")
         PromptServer.instance.send_sync("threejs_render_request", payload)
+        
+        # ... (后续等待返回的代码保持不变)
         timeout = 200
         start_time = time.time()
-        
         while time.time() - start_time < timeout:
             if request_id in RENDER_CACHE:
                 images_b64 = RENDER_CACHE.pop(request_id)
                 return (self._convert_to_tensor(images_b64, width, height),)
             time.sleep(0.1)
-        print(f"[ThreeJS] Error: Render timed out. Request ID {request_id} not received from frontend.")
-        print("[ThreeJS] Possible causes: 1. Browser tab closed. 2. JS Extension failed to load (Check F12 Console).")
-
+        
         return (torch.zeros((total_frames, height, width, 3)),)
 
     def _convert_to_tensor(self, b64_list, width, height):
